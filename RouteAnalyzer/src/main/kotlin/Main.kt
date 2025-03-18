@@ -1,3 +1,4 @@
+import config.CustomParameters
 import kotlin.math.*
 
 data class Waypoint(val timestamp: Long, val latitude: Double, val longitude: Double)
@@ -27,14 +28,14 @@ fun maxDistanceFromStart(waypoints: List<Waypoint>): Triple<Waypoint, Double, In
     val start = waypoints.first()
     var maxDistance = 0.0
     var farthestWaypoint = start
-    var maxIndex = 0;
+    var maxIndex = 0
 
     for ((index,waypoint) in waypoints.withIndex()) {
         val distance = haversine(start.latitude, start.longitude, waypoint.latitude, waypoint.longitude)
         if (distance > maxDistance) {
             maxDistance = distance
             farthestWaypoint = waypoint
-            maxIndex = index;
+            maxIndex = index
         }
     }
 
@@ -59,4 +60,12 @@ fun main() {
     } else {
         println("Error opening file!")
     }
+    // Percorso del file YAML
+    val filePath = "RouteAnalyzer/src/main/resources/ custom-parameters.yml"
+
+    // Crea un'istanza di CustomParameters dal file YAML
+    val parameters = CustomParameters.fromYaml(filePath)
+
+    // Stampa i valori letti
+    println(parameters)
 }
