@@ -44,7 +44,7 @@ fun main() {
     val lines = inputStream?.bufferedReader()?.readLines()
     if (lines != null) {
         println("Lines from CSV:")
-        lines.forEach { println(it) }  // Stampa ogni riga del CSV
+        //lines.forEach { println(it) }  // Stampa ogni riga del CSV
 
         val waypoints = parseWaypoints(lines)
         println("Parsed ${waypoints.size} waypoints")
@@ -52,8 +52,8 @@ fun main() {
 
         // Calcola la distanza massima dal punto di partenza
         val (farthestWaypoint, maxDistance) = maxDistanceFromStart(waypoints)
-        println( " ${farthestWaypoint} waypoint")
-        println(" ${maxDistance} maxdist")
+        println( "${farthestWaypoint} waypoint")
+        println("${maxDistance.roundToLong()}km maxdist")
     } else {
         println("Error opening file!")
     }
