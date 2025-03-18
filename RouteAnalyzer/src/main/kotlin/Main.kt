@@ -23,20 +23,22 @@ fun haversine(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
     return R * c
 }
 
-fun maxDistanceFromStart(waypoints: List<Waypoint>): Pair<Waypoint, Double> {
+fun maxDistanceFromStart(waypoints: List<Waypoint>): Triple<Waypoint, Double, Int> {
     val start = waypoints.first()
     var maxDistance = 0.0
     var farthestWaypoint = start
+    var maxIndex = 0;
 
-    for (waypoint in waypoints) {
+    for ((index,waypoint) in waypoints.withIndex()) {
         val distance = haversine(start.latitude, start.longitude, waypoint.latitude, waypoint.longitude)
         if (distance > maxDistance) {
             maxDistance = distance
             farthestWaypoint = waypoint
+            maxIndex = index;
         }
     }
 
-    return Pair(farthestWaypoint, maxDistance)
+    return Triple(farthestWaypoint, maxDistance, maxIndex)
 }
 
 fun main() {
@@ -44,16 +46,16 @@ fun main() {
     val lines = inputStream?.bufferedReader()?.readLines()
     if (lines != null) {
         println("Lines from CSV:")
-        //lines.forEach { println(it) }  // Stampa ogni riga del CSV
+        lines.forEach { println(it) }  // Stampa ogni riga del CSV
 
         val waypoints = parseWaypoints(lines)
-        println("Parsed ${waypoints.size} waypoints")
-        waypoints.forEach { println(it) }  // Stampa ogni waypoint parsato
+        for ((i,waypoint) in waypoints.withIndex()) {
+            println("$i : ${waypoint.toString()}")
+        }
 
         // Calcola la distanza massima dal punto di partenza
-        val (farthestWaypoint, maxDistance) = maxDistanceFromStart(waypoints)
-        println( "${farthestWaypoint} waypoint")
-        println("${maxDistance.roundToLong()}km maxdist")
+        val (farthestWaypoint, maxDistance,index) = maxDistanceFromStart(waypoints)
+        println( "The farthest waypoint is waypoint #:${index} with a distance of ${String.format("%.2f",maxDistance)} Kms")
     } else {
         println("Error opening file!")
     }
