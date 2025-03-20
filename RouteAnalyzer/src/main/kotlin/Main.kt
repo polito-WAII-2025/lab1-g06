@@ -16,12 +16,12 @@ fun parseWaypoints(lines: List<String>): List<Waypoint> {
 
 
 fun haversine(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
-    val R = 6371.0 // Raggio della Terra in km
+    // Raggio della Terra in km
     val dLat = Math.toRadians(lat2 - lat1)
     val dLon = Math.toRadians(lon2 - lon1)
     val a = sin(dLat / 2) * sin(dLat / 2) + cos(Math.toRadians(lat1)) * cos(Math.toRadians(lat2)) * sin(dLon / 2) * sin(dLon / 2)
     val c = 2 * atan2(sqrt(a), sqrt(1 - a))
-    return R * c
+    return CustomParameters.earthRadiusKm * c
 }
 
 fun maxDistanceFromStart(waypoints: List<Waypoint>): Triple<Waypoint, Double, Int> {
@@ -43,6 +43,7 @@ fun maxDistanceFromStart(waypoints: List<Waypoint>): Triple<Waypoint, Double, In
 }
 
 fun main() {
+
     val inputStream = object {}.javaClass.getResourceAsStream("/waypoints.csv")
     val lines = inputStream?.bufferedReader()?.readLines()
     if (lines != null) {
@@ -60,12 +61,6 @@ fun main() {
     } else {
         println("Error opening file!")
     }
-    // Percorso del file YAML
-    val filePath = "RouteAnalyzer/src/main/resources/ custom-parameters.yml"
 
-    // Crea un'istanza di CustomParameters dal file YAML
-    val parameters = CustomParameters.fromYaml(filePath)
 
-    // Stampa i valori letti
-    println(parameters)
 }

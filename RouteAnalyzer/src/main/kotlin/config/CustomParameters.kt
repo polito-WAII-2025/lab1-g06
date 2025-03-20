@@ -11,19 +11,22 @@ class CustomParameters(
     val mostFrequentedAreaRadiusKm: Double?
 ) {
     companion object {
-        fun fromYaml(filePath: String): CustomParameters {
-            val yaml = Yaml()
-            val inputStream = FileInputStream(filePath)
-            val data: Map<String, Any> = yaml.load(inputStream)
 
-            return CustomParameters(
-                earthRadiusKm = data["earthRadiusKm"].toString().toDouble(),
-                geofenceCenterLatitude = data["geofenceCenterLatitude"].toString().toDouble(),
-                geofenceCenterLongitude = data["geofenceCenterLongitude"].toString().toDouble(),
-                geofenceRadiusKm = data["geofenceRadiusKm"].toString().toDouble(),
-                mostFrequentedAreaRadiusKm = data["mostFrequentedAreaRadiusKm"]?.toString()?.toDouble()
-            )
-        }
+            private val yaml = Yaml()
+            private val inputStream = object {}.javaClass.getResourceAsStream("/custom-parameters.yml")
+            private val data: Map<String, Any> = yaml.load(inputStream)
+
+
+
+                val earthRadiusKm = data["earthRadiusKm"].toString().toDouble()
+                val geofenceCenterLatitude = data["geofenceCenterLatitude"].toString().toDouble()
+                val geofenceCenterLongitude = data["geofenceCenterLongitude"].toString().toDouble()
+                val geofenceRadiusKm = data["geofenceRadiusKm"].toString().toDouble()
+                val mostFrequentedAreaRadiusKm = data["mostFrequentedAreaRadiusKm"]?.toString()?.toDouble()
+
+
+
+
     }
 
     override fun toString(): String {
