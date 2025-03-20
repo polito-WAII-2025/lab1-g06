@@ -2,13 +2,9 @@ package config
 
 import org.yaml.snakeyaml.Yaml
 import java.io.FileInputStream
+import kotlin.properties.Delegates
 
 class CustomParameters(
-    val earthRadiusKm: Double,
-    val geofenceCenterLatitude: Double,
-    val geofenceCenterLongitude: Double,
-    val geofenceRadiusKm: Double,
-    val mostFrequentedAreaRadiusKm: Double?
 ) {
     companion object {
 
@@ -23,8 +19,6 @@ class CustomParameters(
                 val geofenceCenterLongitude = data["geofenceCenterLongitude"].toString().toDouble()
                 val geofenceRadiusKm = data["geofenceRadiusKm"].toString().toDouble()
                 val mostFrequentedAreaRadiusKm = data["mostFrequentedAreaRadiusKm"]?.toString()?.toDouble()
-
-
 
 
     }
