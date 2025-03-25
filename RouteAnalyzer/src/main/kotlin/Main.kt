@@ -14,7 +14,6 @@ fun parseWaypoints(lines: List<String>): List<Waypoint> {
     }
 }
 
-
 fun haversine(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
     // Raggio della Terra in km
     val dLat = Math.toRadians(lat2 - lat1)
@@ -42,6 +41,101 @@ fun maxDistanceFromStart(waypoints: List<Waypoint>): Triple<Waypoint, Double, In
     return Triple(farthestWaypoint, maxDistance, maxIndex)
 }
 
+/*fun findIntersections(waypoints: List<Waypoint>): Int {
+    var nIntersections = 0
+
+    fun orientation(a: Waypoint, b: Waypoint, c: Waypoint): Int {
+        val or = (b.longitude - a.longitude) * (c.latitude - b.latitude) -
+                (b.latitude - a.latitude) * (c.longitude - b.longitude)
+        return when {
+            or > 0 -> 1  // Orientamento orario
+            or < 0 -> 2  // Orientamento antiorario
+            else -> 0  // Punti collineari
+        }
+    }
+
+    fun onSegment(a: Waypoint, b: Waypoint, c: Waypoint): Boolean {
+        return c.longitude <= maxOf(a.longitude, b.longitude) &&
+                c.longitude >= minOf(a.longitude, b.longitude) &&
+                c.latitude <= maxOf(a.latitude, b.latitude) &&
+                c.latitude >= minOf(a.latitude, b.latitude)
+    }
+
+    fun doIntersect(p1: Waypoint, q1: Waypoint, p2: Waypoint, q2: Waypoint): Boolean {
+        val o1 = orientation(p1, q1, p2)
+        val o2 = orientation(p1, q1, q2)
+        val o3 = orientation(p2, q2, p1)
+        val o4 = orientation(p2, q2, q1)
+
+        if (o1 != o2 && o3 != o4) return true
+
+        // Gestione casi speciali di collinearità
+        if (o1 == 0 && onSegment(p1, q1, p2)) return true
+        if (o2 == 0 && onSegment(p1, q1, q2)) return true
+        if (o3 == 0 && onSegment(p2, q2, p1)) return true
+        if (o4 == 0 && onSegment(p2, q2, q1)) return true
+
+        return false
+    }
+
+    for (i in 0 until waypoints.size - 1) {
+        for (j in i + 2 until waypoints.size - 1) {
+            if (doIntersect(waypoints[i], waypoints[i + 1], waypoints[j], waypoints[j + 1])) {
+                nIntersections++
+            }
+        }
+    }
+
+    return nIntersections
+}*/
+
+fun hasIntersections(waypoints: List<Waypoint>): Boolean {
+    fun orientation(a: Waypoint, b: Waypoint, c: Waypoint): Int {
+        val or = (b.longitude - a.longitude) * (c.latitude - b.latitude) -
+                (b.latitude - a.latitude) * (c.longitude - b.longitude)
+        return when {
+            or > 0 -> 1  // Orientamento orario
+            or < 0 -> 2  // Orientamento antiorario
+            else -> 0  // Punti collineari
+        }
+    }
+
+    fun onSegment(a: Waypoint, b: Waypoint, c: Waypoint): Boolean {
+        return c.longitude <= maxOf(a.longitude, b.longitude) &&
+                c.longitude >= minOf(a.longitude, b.longitude) &&
+                c.latitude <= maxOf(a.latitude, b.latitude) &&
+                c.latitude >= minOf(a.latitude, b.latitude)
+    }
+
+    fun doIntersect(p1: Waypoint, q1: Waypoint, p2: Waypoint, q2: Waypoint): Boolean {
+        val o1 = orientation(p1, q1, p2)
+        val o2 = orientation(p1, q1, q2)
+        val o3 = orientation(p2, q2, p1)
+        val o4 = orientation(p2, q2, q1)
+
+        if (o1 != o2 && o3 != o4) return true
+
+        // Gestione casi speciali di collinearità
+        if (o1 == 0 && onSegment(p1, q1, p2)) return true
+        if (o2 == 0 && onSegment(p1, q1, q2)) return true
+        if (o3 == 0 && onSegment(p2, q2, p1)) return true
+        if (o4 == 0 && onSegment(p2, q2, q1)) return true
+
+        return false
+    }
+
+    for (i in 0 until waypoints.size - 1) {
+        for (j in i + 2 until waypoints.size - 1) {
+            if (doIntersect(waypoints[i], waypoints[i + 1], waypoints[j], waypoints[j + 1])) {
+                return true  // Fermati subito se trovi un'intersezione
+            }
+        }
+    }
+
+    return false  // Nessuna intersezione trovata
+}
+
+
 fun main() {
 
     val inputStream = object {}.javaClass.getResourceAsStream("/waypoints.csv")
@@ -58,6 +152,15 @@ fun main() {
         // Calcola la distanza massima dal punto di partenza
         val (farthestWaypoint, maxDistance,index) = maxDistanceFromStart(waypoints)
         println( "The farthest waypoint is waypoint #:${index} with a distance of ${String.format("%.2f",maxDistance)} Kms")
+
+        /*val nItersections = findIntersections(waypoints)
+        println("The path has ${nItersections} intersections")*/
+
+        if(hasIntersections(waypoints)){
+            println("The path has one or more intersections.")
+        }else{
+            println("The path has not intersections.")
+        }
     } else {
         println("Error opening file!")
     }
