@@ -1,7 +1,18 @@
 import config.CustomParameters
 import kotlin.math.*
+import kotlinx.serialization.*
+import kotlinx.serialization.json.*
 
-data class Waypoint(var timestamp: Long?, var latitude: Double, var longitude: Double)
+@Serializable
+data class Waypoint(val timestamp: Long, val latitude: Double, val longitude: Double)
+
+@Serializable
+data class WaypointsOutsideGeofence(
+    val centralWaypoint: Waypoint,
+    val areaRadiusKm: Double,
+    val count: Int,
+    val waypoints: List<Waypoint>
+)
 
 fun parseWaypoints(lines: List<String>): List<Waypoint> {
     return lines.map { line ->
@@ -41,6 +52,18 @@ fun maxDistanceFromStart(waypoints: List<Waypoint>): Triple<Waypoint, Double, In
 
     return Triple(farthestWaypoint, maxDistance, maxIndex)
 }
+
+fun waypointsOutsideGeofence(waypoints: List<Waypoint>): WaypointsOutsideGeofence {
+    val outsideWaypoints: MutableList<Waypoint> = mutableListOf()
+    for (waypoint in waypoints) {
+        if(haversine(waypoint.latitude, waypoint.longitude, CustomParameters.geofenceCenterLatitude, CustomParameters.geofenceCenterLongitude)>CustomParameters.geofenceRadiusKm){
+            outsideWaypoints.add(waypoint)
+        }
+    }
+    return WaypointsOutsideGeofence(Waypoint(0, CustomParameters.geofenceCenterLatitude, CustomParameters.geofenceCenterLongitude), CustomParameters.geofenceRadiusKm, outsideWaypoints.size, outsideWaypoints)
+}
+
+val json = Json { prettyPrint = true }
 
 fun computeMostFrequented(waypoints: List<Waypoint>,radius : Double) : Pair<Waypoint,Int>{
     val minLat = waypoints.minOf{it.latitude}
@@ -90,6 +113,10 @@ fun main() {
 
         val (farthestWaypoint, maxDistance,index) = maxDistanceFromStart(waypoints)
         println( "The farthest waypoint is waypoint #:${index} with a distance of ${String.format("%.2f",maxDistance)} Kms")
+
+        val jsonwWypointsOutsideGeofence = json.encodeToString(waypointsOutsideGeofence(waypoints))
+        println(jsonwWypointsOutsideGeofence)
+
 
         //Most frequented area computation
         var radius = 0.0;
