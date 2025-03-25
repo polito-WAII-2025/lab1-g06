@@ -48,28 +48,28 @@ fun computeMostFrequented(waypoints: List<Waypoint>,radius : Double) : Pair<Wayp
     val minLon = waypoints.minOf{it.longitude}
     val maxLon = waypoints.maxOf{it.longitude}
 
-    val step = haversine(waypoints[0].latitude,waypoints[0].longitude,waypoints[1].latitude,waypoints[1].longitude)*0.1
+    val latStep = (maxLat - minLat)/200
+    val lonStep = (maxLon - minLon)/200
 
+    //val step = haversine(waypoints[0].latitude,waypoints[0].longitude,waypoints[1].latitude,waypoints[1].longitude)*0.1
+    //val step = radius * 0.1
     var maxCount = 0;
     var best = Waypoint(null,0.0,0.0)
 
-    var lat = minLat
 
-    while (lat <= maxLat){
-        var lon = minLon
-        while(lon <= maxLon){
-            val candidate = Waypoint(timestamp = null, latitude = lat, longitude = lon)
+    for (i in 0..200) {
+        val lat = minLat + i * latStep
+        for (j in 0..200) {
+            val lon = minLon + j * lonStep
+            val candidate = Waypoint(null, lat, lon)
 
-            val count = waypoints.count{haversine(it.latitude,it.longitude,candidate.latitude,candidate.longitude) <= radius}
+            val count = waypoints.count { haversine(it.latitude, it.longitude, candidate.latitude, candidate.longitude) <= radius }
 
-            if (count >= maxCount){
-                maxCount = count;
+            if (count > maxCount) { // Use `>` instead of `>=` to favor earlier points in case of a tie
+                maxCount = count
                 best = candidate
             }
-
-            lon += step;
         }
-        lat += step;
     }
 
 
@@ -78,16 +78,13 @@ fun computeMostFrequented(waypoints: List<Waypoint>,radius : Double) : Pair<Wayp
 
 fun main() {
 
-    val inputStream = object {}.javaClass.getResourceAsStream("/waypoints.csv")
+    val inputStream = object {}.javaClass.getResourceAsStream("/waypoints_less.csv")
     val lines = inputStream?.bufferedReader()?.readLines()
     if (lines != null) {
         println("Lines from CSV:")
         lines.forEach { println(it) }  // Stampa ogni riga del CSV
 
         val waypoints = parseWaypoints(lines)
-        //for ((i,waypoint) in waypoints.withIndex()) {
-            //println("$i : ${waypoint.toString()}")
-        //}
 
         // Calcola la distanza massima dal punto di partenza
 
