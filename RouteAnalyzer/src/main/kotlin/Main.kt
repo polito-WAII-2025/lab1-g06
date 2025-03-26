@@ -1,7 +1,10 @@
+
+
 import config.CustomParameters
 import kotlin.math.*
 import kotlinx.serialization.*
 import kotlinx.serialization.json.*
+import java.io.File
 
 @Serializable
 data class Waypoint(val timestamp: Long, val latitude: Double, val longitude: Double)
@@ -13,6 +16,15 @@ data class WaypointsOutsideGeofence(
     val count: Int,
     val waypoints: List<Waypoint>
 )
+
+@Serializable
+data class mostFrequentedArea(val centralWaypoint : Waypoint, val areaRadiusKm : Double, val entriesCount : Int )
+
+@Serializable
+data class maxDistanceFromStart(val waypoint : Waypoint, val distanceKm : Double)
+
+@Serializable
+data class results(val maxDistanceFromStart: maxDistanceFromStart,val mostFrequentedArea: mostFrequentedArea, val waypointsOutsideGeofence: WaypointsOutsideGeofence)
 
 fun parseWaypoints(lines: List<String>): List<Waypoint> {
     return lines.map { line ->
@@ -77,14 +89,14 @@ fun computeMostFrequented(waypoints: List<Waypoint>,radius : Double) : Pair<Wayp
     //val step = haversine(waypoints[0].latitude,waypoints[0].longitude,waypoints[1].latitude,waypoints[1].longitude)*0.1
     //val step = radius * 0.1
     var maxCount = 0;
-    var best = Waypoint(null,0.0,0.0)
+    var best = Waypoint(0,0.0,0.0)
 
 
     for (i in 0..200) {
         val lat = minLat + i * latStep
         for (j in 0..200) {
             val lon = minLon + j * lonStep
-            val candidate = Waypoint(null, lat, lon)
+            val candidate = Waypoint(0, lat, lon)
 
             val count = waypoints.count { haversine(it.latitude, it.longitude, candidate.latitude, candidate.longitude) <= radius }
 
@@ -101,21 +113,23 @@ fun computeMostFrequented(waypoints: List<Waypoint>,radius : Double) : Pair<Wayp
 
 fun main() {
 
-    val inputStream = object {}.javaClass.getResourceAsStream("/waypoints_less.csv")
+    val inputStream = object {}.javaClass.getResourceAsStream("/waypoints_100.csv")
     val lines = inputStream?.bufferedReader()?.readLines()
     if (lines != null) {
-        println("Lines from CSV:")
-        lines.forEach { println(it) }  // Stampa ogni riga del CSV
 
         val waypoints = parseWaypoints(lines)
 
         // Calcola la distanza massima dal punto di partenza
 
         val (farthestWaypoint, maxDistance,index) = maxDistanceFromStart(waypoints)
-        println( "The farthest waypoint is waypoint #:${index} with a distance of ${String.format("%.2f",maxDistance)} Kms")
+        val maxDistanceWaypoint = maxDistanceFromStart(farthestWaypoint, maxDistance)
+        println(maxDistanceWaypoint)
+        //println( "The farthest waypoint is waypoint #:${index} with a distance of ${String.format("%.2f",maxDistance)} Kms")
 
-        val jsonwWypointsOutsideGeofence = json.encodeToString(waypointsOutsideGeofence(waypoints))
-        println(jsonwWypointsOutsideGeofence)
+        //val jsonwWypointsOutsideGeofence = (waypointsOutsideGeofence(waypoints)
+
+
+
 
 
         //Most frequented area computation
@@ -127,8 +141,16 @@ fun main() {
             radius = CustomParameters.mostFrequentedAreaRadiusKm
         }
         println("Radius :  $radius")
-        println(computeMostFrequented(waypoints,radius))
+        val (center,count) = computeMostFrequented(waypoints, radius)
 
+        val r = results(maxDistanceFromStart(farthestWaypoint,maxDistance),mostFrequentedArea(center,radius,count),waypointsOutsideGeofence(waypoints))
+
+
+        println(json.encodeToString(r))
+
+        val file = File("files/output.json")
+        println("Writing to ${file.absolutePath}")
+        file.writeText(json.encodeToString(r))
 
     } else {
         println("Error opening file!")
@@ -136,3 +158,4 @@ fun main() {
 
 
 }
+

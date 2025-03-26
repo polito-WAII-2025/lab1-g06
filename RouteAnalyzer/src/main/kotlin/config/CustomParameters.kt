@@ -1,15 +1,15 @@
 package config
 
 import org.yaml.snakeyaml.Yaml
-import java.io.FileInputStream
-import kotlin.properties.Delegates
+import java.io.File
 
 class CustomParameters(
 ) {
     companion object {
 
             private val yaml = Yaml()
-            private val inputStream = object {}.javaClass.getResourceAsStream("/custom-parameters.yml")
+            private val inputStream = File("files/custom-parameters.yml").inputStream()
+            //private val inputStream = object {}.javaClass.getResourceAsStream("/custom-parameters.yml")
             private val data: Map<String, Any> = yaml.load(inputStream)
 
 
