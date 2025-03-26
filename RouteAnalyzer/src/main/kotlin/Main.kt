@@ -113,7 +113,7 @@ fun computeMostFrequented(waypoints: List<Waypoint>,radius : Double) : Pair<Wayp
 
 fun main() {
 
-    val inputStream = object {}.javaClass.getResourceAsStream("/waypoints_100.csv")
+    val inputStream = object {}.javaClass.getResourceAsStream("/waypoints_less.csv")
     val lines = inputStream?.bufferedReader()?.readLines()
     if (lines != null) {
 
