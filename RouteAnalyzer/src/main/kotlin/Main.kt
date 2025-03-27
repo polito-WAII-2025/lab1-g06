@@ -18,13 +18,13 @@ data class WaypointsOutsideGeofence(
 )
 
 @Serializable
-data class mostFrequentedArea(val centralWaypoint : Waypoint, val areaRadiusKm : Double, val entriesCount : Int )
+data class MostFrequentedArea(val centralWaypoint : Waypoint, val areaRadiusKm : Double, val entriesCount : Int )
 
 @Serializable
-data class maxDistanceFromStart(val waypoint : Waypoint, val distanceKm : Double)
+data class MaxDistanceFromStart(val waypoint : Waypoint, val distanceKm : Double)
 
 @Serializable
-data class results(val maxDistanceFromStart: maxDistanceFromStart,val mostFrequentedArea: mostFrequentedArea, val waypointsOutsideGeofence: WaypointsOutsideGeofence)
+data class Results(val maxDistanceFromStart: MaxDistanceFromStart,val mostFrequentedArea: MostFrequentedArea, val waypointsOutsideGeofence: WaypointsOutsideGeofence)
 
 fun parseWaypoints(lines: List<String>): List<Waypoint> {
     return lines.map { line ->
@@ -36,7 +36,6 @@ fun parseWaypoints(lines: List<String>): List<Waypoint> {
         )
     }
 }
-
 
 fun haversine(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
     // Raggio della Terra in km
@@ -77,6 +76,10 @@ fun waypointsOutsideGeofence(waypoints: List<Waypoint>): WaypointsOutsideGeofenc
 
 val json = Json { prettyPrint = true }
 
+/*
+    The area that contains the path is delimited in a rectangle. Inside the rectangle a set of candidate centers are considered with the computed radius and the
+    waypoints inside are counted
+ */
 fun computeMostFrequented(waypoints: List<Waypoint>,radius : Double) : Pair<Waypoint,Int>{
     val minLat = waypoints.minOf{it.latitude}
     val maxLat = waypoints.maxOf{it.latitude}
@@ -86,9 +89,7 @@ fun computeMostFrequented(waypoints: List<Waypoint>,radius : Double) : Pair<Wayp
     val latStep = (maxLat - minLat)/200
     val lonStep = (maxLon - minLon)/200
 
-    //val step = haversine(waypoints[0].latitude,waypoints[0].longitude,waypoints[1].latitude,waypoints[1].longitude)*0.1
-    //val step = radius * 0.1
-    var maxCount = 0;
+    var maxCount = 0
     var best = Waypoint(0,0.0,0.0)
 
 
@@ -107,49 +108,44 @@ fun computeMostFrequented(waypoints: List<Waypoint>,radius : Double) : Pair<Wayp
         }
     }
 
-
     return Pair(best,maxCount)
 }
 
 fun main() {
 
-    val inputStream = object {}.javaClass.getResourceAsStream("/waypoints_less.csv")
+    val inputStream = object {}.javaClass.getResourceAsStream("/waypoints.csv")
     val lines = inputStream?.bufferedReader()?.readLines()
     if (lines != null) {
 
         val waypoints = parseWaypoints(lines)
 
-        // Calcola la distanza massima dal punto di partenza
+        // Calcola la distanza massima dal punto di partenza e il punto relativo
 
-        val (farthestWaypoint, maxDistance,index) = maxDistanceFromStart(waypoints)
-        val maxDistanceWaypoint = maxDistanceFromStart(farthestWaypoint, maxDistance)
-        println(maxDistanceWaypoint)
-        //println( "The farthest waypoint is waypoint #:${index} with a distance of ${String.format("%.2f",maxDistance)} Kms")
+        val (farthestWaypoint, maxDistance) = maxDistanceFromStart(waypoints)
 
-        //val jsonwWypointsOutsideGeofence = (waypointsOutsideGeofence(waypoints)
-
-
-
-
-
-        //Most frequented area computation
-        var radius = 0.0;
-        if(CustomParameters.mostFrequentedAreaRadiusKm == null){
-            radius = maxDistance * 0.1
+        //Most frequented area radius computation
+        var radius = maxDistance * 0.1
+        if (maxDistance < 1){
+            radius = 0.1
         }
-        else {
-            radius = CustomParameters.mostFrequentedAreaRadiusKm
+        if(CustomParameters.mostFrequentedAreaRadiusKm != null){
+            radius =  CustomParameters.mostFrequentedAreaRadiusKm
         }
-        println("Radius :  $radius")
+
+        //Compute most frequented area
         val (center,count) = computeMostFrequented(waypoints, radius)
 
-        val r = results(maxDistanceFromStart(farthestWaypoint,maxDistance),mostFrequentedArea(center,radius,count),waypointsOutsideGeofence(waypoints))
+        //Compute points outside GeoFence
+
+        val waypointsOutside  = waypointsOutsideGeofence(waypoints)
+
+        //r contiene i risultati per serializzarli in JSON
+        val r = Results(MaxDistanceFromStart(farthestWaypoint,maxDistance),MostFrequentedArea(center,radius,count),waypointsOutside)
 
 
         println(json.encodeToString(r))
 
         val file = File("evaluation/output.json")
-        println("Writing to ${file.absolutePath}")
         file.writeText(json.encodeToString(r))
 
     } else {
