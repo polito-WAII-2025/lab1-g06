@@ -148,7 +148,7 @@ fun main() {
 
         println(json.encodeToString(r))
 
-        val file = File("files/output.json")
+        val file = File("evaluation/output.json")
         println("Writing to ${file.absolutePath}")
         file.writeText(json.encodeToString(r))
 
