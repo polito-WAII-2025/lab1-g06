@@ -18,6 +18,9 @@ After having built the jar, from the `RouteAnalyzer` folder
 
 # Extra features 
 
+## Intersection detection 
 
+In `output_advanced.json` there is a list of intersections computed using a geometric approach considering 
+the segments that form the path
 
 

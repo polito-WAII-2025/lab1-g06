@@ -9,6 +9,8 @@ import java.io.File
 @Serializable
 data class Waypoint(val timestamp: Long, val latitude: Double, val longitude: Double)
 
+data class Segment(val start : Waypoint, val end : Waypoint)
+
 @Serializable
 data class WaypointsOutsideGeofence(
     val centralWaypoint: Waypoint,
@@ -25,6 +27,12 @@ data class MaxDistanceFromStart(val waypoint : Waypoint, val distanceKm : Double
 
 @Serializable
 data class Results(val maxDistanceFromStart: MaxDistanceFromStart,val mostFrequentedArea: MostFrequentedArea, val waypointsOutsideGeofence: WaypointsOutsideGeofence)
+
+@Serializable
+data class Intersections(val count : Int,val intersections : List<Waypoint> )
+
+@Serializable
+data class ExtraResults(val intersections : Intersections)
 
 fun parseWaypoints(lines: List<String>): List<Waypoint> {
     return lines.map { line ->
@@ -111,6 +119,58 @@ fun computeMostFrequented(waypoints: List<Waypoint>,radius : Double) : Pair<Wayp
     return Pair(best,maxCount)
 }
 
+fun findIntersection(s1 : Segment, s2 : Segment) : Waypoint?{
+
+    val x1 = s1.start.latitude
+    val y1 = s1.start.longitude
+    val x2 = s1.end.latitude
+    val y2 = s1.end.longitude
+    val x3 = s2.start.latitude
+    val y3 = s2.start.longitude
+    val x4 = s2.end.latitude
+    val y4 = s2.end.longitude
+
+    val denominator = ((x4-x3)*(y2-y1)) - ((y4-y3)*(x2-x1))
+    val a = ((x4-x3)*(y3-y1)-((y4-y3)*(x3-x1)))
+    val b = ((x2-x1)*(y3-y1)-((y2-y1)*(x3-x1)))
+
+    val alfa = a/denominator
+    val beta = b/denominator
+
+    if(denominator == 0.0){
+        //Segments are parallel
+        return null
+    }
+    else if(a == 0.0 && b == 0.0){
+        //Segments are collinear, we do not consider this an intersection
+        return null
+    }
+    else if((alfa > 0 && alfa <1) && (beta > 0 && beta <1)){
+        val x0 = x1 + alfa*(x2-x1)
+        val y0 = y3 + beta*(y4-y3)
+        return Waypoint(0,x0,y0)
+    }
+    else{
+        return null
+    }
+}
+
+fun findIntersections(waypoints : List<Waypoint>) : List<Waypoint>{
+    val intersections : MutableList<Waypoint> = mutableListOf()
+    for (i in 0..<waypoints.size-2){
+        for(j in i+2..<waypoints.size-1){
+
+            val intersection = findIntersection(Segment(waypoints[i],waypoints[i+1]),Segment(waypoints[j],waypoints[j+1]))
+            if(intersection != null){
+                intersections.add(intersection)
+            }
+
+        }
+    }
+
+    return intersections
+}
+
 fun main() {
 
     val inputStream = object {}.javaClass.getResourceAsStream("/waypoints.csv")
@@ -143,10 +203,17 @@ fun main() {
         val r = Results(MaxDistanceFromStart(farthestWaypoint,maxDistance),MostFrequentedArea(center,radius,count),waypointsOutside)
 
 
-        println(json.encodeToString(r))
+        //println(json.encodeToString(r))
+
+        val intersections = findIntersections(waypoints)
+
+        val er = ExtraResults(Intersections(intersections.size,intersections))
 
         val file = File("evaluation/output.json")
         file.writeText(json.encodeToString(r))
+
+        val file2 = File("evaluation/output_advanced.json")
+        file2.writeText((json.encodeToString(er)))
 
     } else {
         println("Error opening file!")
