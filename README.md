@@ -12,7 +12,7 @@ In order to run the application the working directory has to be set to `./RouteA
 Place the `custom-parameters.yml` inside a `./evaluation` directory in the same directory as the jar file
 
 ## As a Docker container 
-After having built the jar 
+After having built the jar, from the `RouteAnalyzer` folder
 - `docker build -t . routeanalyzer` 
 - `docker-compose up`
 

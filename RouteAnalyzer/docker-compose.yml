@@ -2,6 +2,6 @@ services :
   routeanalyzer :
     image : routeanalyzer
     volumes :
-      - ./evaluation:/app/evaluation/
+      - ../evaluation:/app/evaluation/
     command : java -jar /app/app.jar
     #command : ls files
